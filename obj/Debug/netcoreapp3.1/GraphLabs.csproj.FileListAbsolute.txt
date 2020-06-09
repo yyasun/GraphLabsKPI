@@ -1,0 +1,13 @@
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\obj\Debug\netcoreapp3.1\GraphLabs.csprojAssemblyReference.cache
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\obj\Debug\netcoreapp3.1\GraphLabs.csproj.CoreCompileInputs.cache
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\obj\Debug\netcoreapp3.1\GraphLabs.AssemblyInfoInputs.cache
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\obj\Debug\netcoreapp3.1\GraphLabs.AssemblyInfo.cs
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\bin\Debug\netcoreapp3.1\GraphLabs.exe
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\bin\Debug\netcoreapp3.1\GraphLabs.deps.json
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\bin\Debug\netcoreapp3.1\GraphLabs.runtimeconfig.json
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\bin\Debug\netcoreapp3.1\GraphLabs.runtimeconfig.dev.json
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\bin\Debug\netcoreapp3.1\GraphLabs.dll
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\bin\Debug\netcoreapp3.1\GraphLabs.pdb
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\obj\Debug\netcoreapp3.1\GraphLabs.dll
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\obj\Debug\netcoreapp3.1\GraphLabs.pdb
+C:\Users\BattleStation\source\repos\GraphLabs\GraphLabs\obj\Debug\netcoreapp3.1\GraphLabs.genruntimeconfig.cache

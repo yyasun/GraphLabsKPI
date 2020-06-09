@@ -6,7 +6,8 @@ namespace GraphLabs
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("Hello World!\r\n");
+            Console.WriteLine(1);
         }
     }
 }
