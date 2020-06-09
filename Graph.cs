@@ -15,11 +15,20 @@ namespace GraphLabs
         {
             Vertexes = new Vertex[10];
         }
-        public Graph(string fileName)
+        public Graph(string fileName, bool isDirected)
         {
-            LoadGraph(fileName);
+            LoadGraph(fileName,isDirected);
         }
-        public void LoadGraph(string fileName)
+        public void LoadUndirGraph(string fileName)
+        {
+            LoadGraph(fileName, false);
+        }
+        public void LoadDirectGraph(string fileName)
+        {
+            LoadGraph(fileName, true);
+        }
+
+        void LoadGraph(string fileName, bool isDir)
         {
             var list = File.ReadAllLines(fileName);
 
@@ -47,11 +56,12 @@ namespace GraphLabs
                         Vertexes[endPoint - 1] = end;
                     }
                     Vertexes[value - 1].Adjacent.Add(end);
+                    if(!isDir)
                     Vertexes[endPoint - 1].Adjacent.Add(Vertexes[value - 1]);
                 }
             }
         }
-
+       
         const string endL = "\r\n";
         void WriteToFile(string str, TextWriter tw)
         {
@@ -61,7 +71,7 @@ namespace GraphLabs
         {
             Console.Write(str);
         }
-        
+
         public void PrintIncidentsMatrix(string filename = null)
         {
             Action<string, TextWriter> write;
@@ -72,7 +82,6 @@ namespace GraphLabs
                 write = new Action<string, TextWriter>(WriteToFile);
             }
             else write = new Action<string, TextWriter>(WriteToConsole);
-
 
            
             for (int i = 0,c=1; i < Vertexes.Length; i++)
@@ -86,7 +95,6 @@ namespace GraphLabs
                         write($"{Vertexes[i].Value} {adj.Value}{endL}", tw);
                     }                                        
                 }
-                //write(endL, tw);
             }
 
             if (tw != null)
@@ -94,10 +102,7 @@ namespace GraphLabs
                 tw.Flush();
                 tw.Dispose();
             }
-
         }
-
-
         public void PrintAdjacencyMatrix(string filename = null)
         {
             Action<string, TextWriter> write;
@@ -128,8 +133,7 @@ namespace GraphLabs
                 tw.Dispose();
             }
         }
-
-        public bool IsKComplete()
+        public int IsKComplete()
         {
             int k = Vertexes[0].Value;
             bool isKComplete = true;
@@ -137,12 +141,11 @@ namespace GraphLabs
             {
                 isKComplete = k == i.Value;
             }
-            return isKComplete;
+            return isKComplete ? k : -1 ;
         }
         public void PrintDegreeEachVertex(bool toFile = false)
         {
-
-            if (IsKComplete())
+            if (IsKComplete()!=-1)
                 Console.WriteLine($"graph is k-complete: {Vertexes[0].Adjacent.Count}");
             foreach (var i in Vertexes)
             {
@@ -159,6 +162,21 @@ namespace GraphLabs
             foreach (var v in Vertexes.Where(x => x.Degree == 1))
                 Console.WriteLine(v.Value);
         }
+
+        public void DepthFirstSearch(int start,int sValue)
+        { 
+            //out current vertex
+            //output dfs number
+            //output stack  
+        }
+        public void BreadthFirstSearch(int start,int sValue)
+        {
+            //out current vertex
+            //output bfs number
+            //output stack
+        }
+
+
     }
 }
 

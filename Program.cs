@@ -6,7 +6,7 @@ namespace GraphLabs
     {
         static void Main(string[] args)
         {
-            Graph graph = new Graph("graph.txt");
+            Graph graph = new Graph("graph.txt",false);
             graph.PrintIncidentsMatrix("inc.txt");
             graph.PrintAdjacencyMatrix("adj.txt");
         }
