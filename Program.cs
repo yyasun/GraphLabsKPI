@@ -6,8 +6,9 @@ namespace GraphLabs
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!\r\n");
-            Console.WriteLine(1);
+            Graph graph = new Graph("graph.txt");
+            graph.PrintIncidentsMatrix("inc.txt");
+            graph.PrintAdjacencyMatrix("adj.txt");
         }
     }
 }

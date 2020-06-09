@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,10 @@ namespace GraphLabs
         public Graph()
         {
             Vertexes = new Vertex[10];
+        }
+        public Graph(string fileName)
+        {
+            LoadGraph(fileName);
         }
         public void LoadGraph(string fileName)
         {
@@ -31,75 +36,99 @@ namespace GraphLabs
                 int endPoint = -1;
                 if (edge.Length > 1)
                     endPoint = Convert.ToInt32(edge[1]);
-                if (Vertexes[value] == null)
-                    Vertexes[value] = new Vertex() { Value = value };
+                if (Vertexes[value - 1] == null)
+                    Vertexes[value - 1] = new Vertex() { Value = value };
                 if (endPoint > 0)
                 {
                     var end = new Vertex();
-                    if (Vertexes[endPoint] == null)
+                    if (Vertexes[endPoint - 1] == null)
                     {
                         end.Value = endPoint;
-                        Vertexes[endPoint] = end;
+                        Vertexes[endPoint - 1] = end;
                     }
-                    Vertexes[value].Adjacent.Add(end);
+                    Vertexes[value - 1].Adjacent.Add(end);
+                    Vertexes[endPoint - 1].Adjacent.Add(Vertexes[value - 1]);
                 }
             }
         }
-        public void IncidentsMatrix(string filename)
-        {
-            Action<string, TextWriter> write;
-            using (TextWriter tw = new StreamWriter(filename))
-            {
-                if (!String.IsNullOrEmpty(filename))
-                    write = new Action<string, TextWriter>(WriteToFile);
-                else write = new Action<string, TextWriter>(WriteToConsole);
 
-                for (int i = 1; i <= edgesCount; i++)
-                    Console.Write("e" + i + " ");
-                for (int i = 0; i < Vertexes.Length; i++)
-                {
-                    Console.WriteLine();
-                    Console.Write("v" + i + 1 + " ");
-                    for (int j = 0; j < Vertexes.Length; j++)
-                    {
-                        Console.Write(Vertexes[i].Adjacent.Find(x => x.Value == j + 1));
-                    }
-                }
-            }
-        }
-        public void WriteToFile(string str, TextWriter tw)
+        const string endL = "\r\n";
+        void WriteToFile(string str, TextWriter tw)
         {
             tw.Write(str);
         }
-        public void WriteToConsole(string str, TextWriter tw = null)
+        void WriteToConsole(string str, TextWriter tw = null)
         {
             Console.Write(str);
         }
-        public void AdjacencyMatrix(string filename = null)
+        
+        public void PrintIncidentsMatrix(string filename = null)
         {
             Action<string, TextWriter> write;
-
-            using (TextWriter tw = new StreamWriter(filename))
+            TextWriter tw = null;
+            if (!String.IsNullOrEmpty(filename))
             {
-                if (!String.IsNullOrEmpty(filename))
-                    write = new Action<string, TextWriter>(WriteToFile);
-                else write = new Action<string, TextWriter>(WriteToConsole);
-                string endL = "\r\n";
+                tw = new StreamWriter(filename);
+                write = new Action<string, TextWriter>(WriteToFile);
+            }
+            else write = new Action<string, TextWriter>(WriteToConsole);
 
-                for (int i = 1; i <= Vertexes.Length; i++)
-                    write("v" + i + " ", tw);
-                for (int i = 0; i < Vertexes.Length; i++)
+
+           
+            for (int i = 0,c=1; i < Vertexes.Length; i++)
+            {
+                foreach (var adj in Vertexes[i].Adjacent)
                 {
-                    write(endL, tw);
-                    Console.Write("v" + i + 1 + " ");
-                    for (int j = 0; j < Vertexes.Length; j++)
+
+                    if (Vertexes[i].Value < adj.Value)
                     {
-                        int exists = Convert.ToInt32(Vertexes[i].Adjacent.Find(x => x.Value == j + 1) != null);
-                        write(exists.ToString(), tw);
-                    }
+                        write("e" + (c++) + " ", tw);
+                        write($"{Vertexes[i].Value} {adj.Value}{endL}", tw);
+                    }                                        
+                }
+                //write(endL, tw);
+            }
+
+            if (tw != null)
+            {
+                tw.Flush();
+                tw.Dispose();
+            }
+
+        }
+
+
+        public void PrintAdjacencyMatrix(string filename = null)
+        {
+            Action<string, TextWriter> write;
+            TextWriter tw = null;
+            if (!String.IsNullOrEmpty(filename))
+            {
+                tw = new StreamWriter(filename);
+                write = new Action<string, TextWriter>(WriteToFile);
+            }
+            else write = new Action<string, TextWriter>(WriteToConsole);
+
+            write("  ", tw);
+            for (int i = 1; i <= Vertexes.Length; i++)
+                write("v" + i + " ", tw);
+            for (int i = 0; i < Vertexes.Length; i++)
+            {
+                write(endL, tw);
+                write("v" + (i + 1) + " ", tw);
+                for (int j = 0; j < Vertexes.Length; j++)
+                {
+                    int exists = Convert.ToInt32(Vertexes[i].Adjacent.Find(x => x.Value == j + 1) != null);
+                    write(exists.ToString()+"  ", tw);
                 }
             }
+            if (tw != null)
+            {
+                tw.Flush();
+                tw.Dispose();
+            }
         }
+
         public bool IsKComplete()
         {
             int k = Vertexes[0].Value;
@@ -110,7 +139,7 @@ namespace GraphLabs
             }
             return isKComplete;
         }
-        public void DegreeEachVertex(bool toFile = false)
+        public void PrintDegreeEachVertex(bool toFile = false)
         {
 
             if (IsKComplete())
@@ -120,13 +149,16 @@ namespace GraphLabs
                 Console.WriteLine($"v{i.Value} has degree: {i.Degree}");
             }
         }
-        //public List<string> IsolatedVertexes()
-        //{ 
-
-        //}
-        //public List<string> FloatingVertexes()
-        //{ 
-
-        //}
+        public void PrintIsolatedVertexes()
+        {
+            foreach (var v in Vertexes.Where(x => x.Degree == 0))
+                Console.WriteLine(v.Value);
+        }
+        public void PrintFloatingVertexes()
+        {
+            foreach (var v in Vertexes.Where(x => x.Degree == 1))
+                Console.WriteLine(v.Value);
+        }
     }
 }
+
