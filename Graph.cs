@@ -10,10 +10,10 @@ namespace GraphLabs
     public class Graph
     {
         private int edgesCount;
-        public Vertex[] Vertexes { get; set; }
+        public Vertex[] Vertecies { get; set; }
         public Graph()
         {
-            Vertexes = new Vertex[10];
+            Vertecies = new Vertex[10];
         }
         public Graph(string fileName, bool isDirected)
         {
@@ -27,7 +27,6 @@ namespace GraphLabs
         {
             LoadGraph(fileName, true);
         }
-
         void LoadGraph(string fileName, bool isDir)
         {
             var list = File.ReadAllLines(fileName);
@@ -36,7 +35,7 @@ namespace GraphLabs
             int count = Convert.ToInt32(info[0]);
             edgesCount = Convert.ToInt32(info[1]);
 
-            Vertexes = new Vertex[count];
+            Vertecies = new Vertex[count];
 
             foreach (var line in list.Skip(1))
             {
@@ -45,23 +44,25 @@ namespace GraphLabs
                 int endPoint = -1;
                 if (edge.Length > 1)
                     endPoint = Convert.ToInt32(edge[1]);
-                if (Vertexes[value - 1] == null)
-                    Vertexes[value - 1] = new Vertex() { Value = value };
+                if (Vertecies[value - 1] == null)
+                    Vertecies[value - 1] = new Vertex() { Value = value };
                 if (endPoint > 0)
                 {
-                    var end = new Vertex();
-                    if (Vertexes[endPoint - 1] == null)
+                    var end = Vertecies[endPoint-1];
+                    if (end == null)
                     {
+                        end = new Vertex();
                         end.Value = endPoint;
-                        Vertexes[endPoint - 1] = end;
+                        Vertecies[endPoint - 1] = end;
                     }
-                    Vertexes[value - 1].Adjacent.Add(end);
+                    Vertecies[value - 1].Adjacent.Add(end);
                     if(!isDir)
-                    Vertexes[endPoint - 1].Adjacent.Add(Vertexes[value - 1]);
+                    Vertecies[endPoint - 1].Adjacent.Add(Vertecies[value - 1]);
                 }
             }
         }
        
+
         const string endL = "\r\n";
         void WriteToFile(string str, TextWriter tw)
         {
@@ -84,15 +85,15 @@ namespace GraphLabs
             else write = new Action<string, TextWriter>(WriteToConsole);
 
            
-            for (int i = 0,c=1; i < Vertexes.Length; i++)
+            for (int i = 0,c=1; i < Vertecies.Length; i++)
             {
-                foreach (var adj in Vertexes[i].Adjacent)
+                foreach (var adj in Vertecies[i].Adjacent)
                 {
 
-                    if (Vertexes[i].Value < adj.Value)
+                    if (Vertecies[i].Value < adj.Value)
                     {
                         write("e" + (c++) + " ", tw);
-                        write($"{Vertexes[i].Value} {adj.Value}{endL}", tw);
+                        write($"{Vertecies[i].Value} {adj.Value}{endL}", tw);
                     }                                        
                 }
             }
@@ -115,15 +116,15 @@ namespace GraphLabs
             else write = new Action<string, TextWriter>(WriteToConsole);
 
             write("  ", tw);
-            for (int i = 1; i <= Vertexes.Length; i++)
+            for (int i = 1; i <= Vertecies.Length; i++)
                 write("v" + i + " ", tw);
-            for (int i = 0; i < Vertexes.Length; i++)
+            for (int i = 0; i < Vertecies.Length; i++)
             {
                 write(endL, tw);
                 write("v" + (i + 1) + " ", tw);
-                for (int j = 0; j < Vertexes.Length; j++)
+                for (int j = 0; j < Vertecies.Length; j++)
                 {
-                    int exists = Convert.ToInt32(Vertexes[i].Adjacent.Find(x => x.Value == j + 1) != null);
+                    int exists = Convert.ToInt32(Vertecies[i].Adjacent.Find(x => x.Value == j + 1) != null);
                     write(exists.ToString()+"  ", tw);
                 }
             }
@@ -135,9 +136,9 @@ namespace GraphLabs
         }
         public int IsKComplete()
         {
-            int k = Vertexes[0].Value;
+            int k = Vertecies[0].Value;
             bool isKComplete = true;
-            foreach (var i in Vertexes)
+            foreach (var i in Vertecies)
             {
                 isKComplete = k == i.Value;
             }
@@ -146,20 +147,20 @@ namespace GraphLabs
         public void PrintDegreeEachVertex(bool toFile = false)
         {
             if (IsKComplete()!=-1)
-                Console.WriteLine($"graph is k-complete: {Vertexes[0].Adjacent.Count}");
-            foreach (var i in Vertexes)
+                Console.WriteLine($"graph is k-complete: {Vertecies[0].Adjacent.Count}");
+            foreach (var i in Vertecies)
             {
                 Console.WriteLine($"v{i.Value} has degree: {i.Degree}");
             }
         }
         public void PrintIsolatedVertexes()
         {
-            foreach (var v in Vertexes.Where(x => x.Degree == 0))
+            foreach (var v in Vertecies.Where(x => x.Degree == 0))
                 Console.WriteLine(v.Value);
         }
         public void PrintFloatingVertexes()
         {
-            foreach (var v in Vertexes.Where(x => x.Degree == 1))
+            foreach (var v in Vertecies.Where(x => x.Degree == 1))
                 Console.WriteLine(v.Value);
         }
 
@@ -169,11 +170,43 @@ namespace GraphLabs
             //output dfs number
             //output stack  
         }
-        public void BreadthFirstSearch(int start,int sValue)
+        public int BreadthFirstSearch(int start,int sValue)
+        {          
+            int[] lvl = new int[Vertecies.Length];
+            for (int j = 0; j < lvl.Length; j++)
+            {
+                lvl[j] = -1;
+            }
+            Queue<Vertex> frontier = new Queue<Vertex>();
+            // invariant: queue items are always a frontier
+            frontier.Enqueue(Vertecies[start-1]);
+            int i = 1;
+            lvl[Vertecies[start-1].Value-1] = 0;
+            OutputSearch(lvl, frontier, Vertecies[start-1]);
+            while (frontier.Count > 0)
+            {                
+                List<Vertex> next = new List<Vertex>();
+                int len = frontier.Count;
+                for(int j=0;j<len;  j++)
+                    foreach (var n in frontier.Dequeue().Adjacent)
+                    {
+                        if (lvl[n.Value-1] == -1)
+                        {
+                            lvl[n.Value-1] = i;
+                            frontier.Enqueue(n);
+                            OutputSearch(lvl, frontier,n);
+                        }
+                    }                
+                i++;
+            }
+            return lvl[sValue-1];
+        }        
+        void OutputSearch(int[] lvl,Queue<Vertex> frontier , Vertex cur)
         {
-            //out current vertex
-            //output bfs number
-            //output stack
+            Console.Write($"Vertex {cur.Value} No: {lvl[cur.Value-1]} Queue: ");
+            foreach(var i in frontier)
+                Console.Write(i.Value+" ");
+            Console.WriteLine();
         }
 
 
