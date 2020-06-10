@@ -7,7 +7,7 @@ namespace GraphLabs
     public class Vertex
     {
         public int Value { get; set; }
-        public int Degree => Adjacent.Count;
+        public int Degree { get => Adjacent.Count; }
         private List<Vertex> _adjacent;
         public List<Vertex> Adjacent { get
             {
@@ -18,7 +18,6 @@ namespace GraphLabs
                 return _adjacent;
             } 
             set { _adjacent = value; }
-        }
-        public int Weight { get; set; }
+        }        
     }
 }

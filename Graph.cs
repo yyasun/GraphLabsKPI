@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.Serialization.Formatters;
 using System.Text;
 
 namespace GraphLabs
@@ -18,7 +19,7 @@ namespace GraphLabs
         }
         public Graph(string fileName, bool isDirected)
         {
-            LoadGraph(fileName,isDirected);
+            LoadGraph(fileName, isDirected);
         }
         public void LoadUndirGraph(string fileName)
         {
@@ -27,7 +28,7 @@ namespace GraphLabs
         public void LoadDirectGraph(string fileName)
         {
             LoadGraph(fileName, true);
-        }    
+        }
         void LoadGraph(string fileName, bool isDir)
         {
             var list = File.ReadAllLines(fileName);
@@ -49,7 +50,7 @@ namespace GraphLabs
                     Vertecies[value - 1] = new Vertex() { Value = value };
                 if (endPoint > 0)
                 {
-                    var end = Vertecies[endPoint-1];
+                    var end = Vertecies[endPoint - 1];
                     if (end == null)
                     {
                         end = new Vertex();
@@ -57,12 +58,19 @@ namespace GraphLabs
                         Vertecies[endPoint - 1] = end;
                     }
                     Vertecies[value - 1].Adjacent.Add(end);
-                    if(!isDir)
-                    Vertecies[endPoint - 1].Adjacent.Add(Vertecies[value - 1]);
+                    if (!isDir)
+                        Vertecies[endPoint - 1].Adjacent.Add(Vertecies[value - 1]);
                 }
             }
-        }       
-
+        }
+        public void ShowGraph()
+        {
+            foreach (var i in this.Vertecies)
+            {
+                foreach (var j in i.Adjacent)
+                    Console.WriteLine(i.Value + " " + j.Value);
+            }
+        }
         const string endL = "\r\n";
         void WriteToFile(string str, TextWriter tw)
         {
@@ -84,8 +92,7 @@ namespace GraphLabs
             }
             else write = new Action<string, TextWriter>(WriteToConsole);
 
-           
-            for (int i = 0,c=1; i < Vertecies.Length; i++)
+            for (int i = 0, c = 1; i < Vertecies.Length; i++)
             {
                 foreach (var adj in Vertecies[i].Adjacent)
                 {
@@ -94,7 +101,7 @@ namespace GraphLabs
                     {
                         write("e" + (c++) + " ", tw);
                         write($"{Vertecies[i].Value} {adj.Value}{endL}", tw);
-                    }                                        
+                    }
                 }
             }
 
@@ -125,7 +132,7 @@ namespace GraphLabs
                 for (int j = 0; j < Vertecies.Length; j++)
                 {
                     int exists = Convert.ToInt32(Vertecies[i].Adjacent.Find(x => x.Value == j + 1) != null);
-                    write(exists.ToString()+"  ", tw);
+                    write(exists.ToString() + "  ", tw);
                 }
             }
             if (tw != null)
@@ -133,10 +140,10 @@ namespace GraphLabs
                 tw.Flush();
                 tw.Dispose();
             }
-        }        
+        }
         public void PrintDegreeEachVertex(bool toFile = false)
         {
-            if (IsKComplete()!=-1)
+            if (IsKComplete() != -1)
                 Console.WriteLine($"graph is k-complete: {Vertecies[0].Adjacent.Count}");
             foreach (var i in Vertecies)
             {
@@ -164,67 +171,62 @@ namespace GraphLabs
                 Console.WriteLine(v.Value);
         }
 
-        public int DepthFirstSearch(int start,int sValue, bool detectLoops=false, List<List<Vertex>> lst = null)
-        {  
+        public Stack<Vertex> finished;
+        public int DepthFirstSearch(int start, int sValue)
+        {
+            finished = new Stack<Vertex>();
             int[] lvl = InitSearchLvl(Vertecies.Length);
-            
+            Stack<Vertex> queue = new Stack<Vertex>();
             foreach (var i in Vertecies)
             {
-
-                Stack<Vertex> queue = null;
-                if(detectLoops)
-                    queue= new Stack<Vertex>();
                 if (lvl[i.Value - 1] == -1)
-                {                    
-                    lvl[i.Value - 1] = 0;
-                    DFSVisit(queue,i, lvl,detectLoops,1,lst);                    
-                }
-                if (detectLoops&&queue.Count > 1)
                 {
-                    lst.Add(queue.ToList());
+                    lvl[i.Value - 1] = 0;
+                    DFSVisit(queue, i, lvl, 1);
                 }
-            }     
-            return lvl[sValue - 1]-lvl[start-1];
+            }
+            return lvl[sValue - 1] - lvl[start - 1];
         }
-        public void DFSVisit(Stack<Vertex> stack ,Vertex start,int [] lvl,bool detectLoops=false,int curLvl= 1,List<List<Vertex>> lst=null)
-        {            
-            OutputSearch(lvl,stack , start);
+        private void DFSVisit(Stack<Vertex> stack, Vertex start, int[] lvl, int curLvl = 1)
+        {
+            OutputSearch(lvl, stack, start);
             stack.Push(start);
             foreach (var desc in start.Adjacent)
             {
                 if (lvl[desc.Value - 1] == -1)
                 {
                     lvl[desc.Value - 1] = curLvl;
-                    DFSVisit(stack, desc, lvl, detectLoops, curLvl + 1, lst);
+                    DFSVisit(stack, desc, lvl, curLvl + 1);
                 }
-            }            
-        }        
-        public int BreadthFirstSearch(int start,int sValue)
+            }
+            finished.Push(stack.Pop());
+        }
+        public int BreadthFirstSearch(int start, int sValue)
         {
             int[] lvl = InitSearchLvl(Vertecies.Length);
             Queue<Vertex> frontier = new Queue<Vertex>();
             // invariant: queue items are always a frontier
-            frontier.Enqueue(Vertecies[start-1]);
+            frontier.Enqueue(Vertecies[start - 1]);
             int i = 1;
-            lvl[Vertecies[start-1].Value-1] = 0;
-            OutputSearch(lvl, frontier, Vertecies[start-1]);
+            lvl[Vertecies[start - 1].Value - 1] = 0;
+            OutputSearch(lvl, frontier, Vertecies[start - 1]);
             while (frontier.Count > 0)
-            {                
+            {
                 List<Vertex> next = new List<Vertex>();
                 int len = frontier.Count;
-                for(int j=0;j<len;  j++)
+                for (int j = 0; j < len; j++)
                     foreach (var n in frontier.Dequeue().Adjacent)
                     {
-                        if (lvl[n.Value-1] == -1)
+                        if (lvl[n.Value - 1] == -1)
                         {
-                            lvl[n.Value-1] = i;
+                            lvl[n.Value - 1] = i;
                             frontier.Enqueue(n);
-                            OutputSearch(lvl, frontier,n);
+                            OutputSearch(lvl, frontier, n);
                         }
-                    }                
+                    }
                 i++;
             }
-            return lvl[sValue-1];
+            return lvl[sValue - 1];
         }
         private int[] InitSearchLvl(int len)
         {
@@ -235,25 +237,100 @@ namespace GraphLabs
             }
             return lvl;
         }
-        void OutputSearch(int[] lvl,IEnumerable<Vertex> frontier , Vertex cur)
+        void OutputSearch(int[] lvl, IEnumerable<Vertex> frontier, Vertex cur)
         {
             Console.Write($"Vertex {cur.Value} No: {lvl[cur.Value-1]} Queue: ");
-            foreach(var i in frontier.Reverse())
-                Console.Write(i.Value+" ");
+            foreach (var i in frontier.Reverse())
+                Console.Write(i.Value + " ");
             Console.WriteLine();
+        }
+
+        public List<Vertex> TopologicalSort()
+        {
+            DepthFirstSearch(1, 2);
+            var lst = finished.ToList();
+            return lst;
+        }
+
+        public Vertex[] Transpose()
+        {
+            Vertex[] transposed = new Vertex[Vertecies.Length];
+            foreach (var v in Vertecies)
+                transposed[v.Value - 1] = new Vertex() { Value = v.Value };
+            foreach (var v in Vertecies)
+            {
+                foreach (var child in v.Adjacent)
+                {
+                    if (!transposed[child.Value - 1].Adjacent.Contains(transposed[v.Value-1]))
+                    {                      
+                        transposed[child.Value - 1].Adjacent.Add(transposed[v.Value - 1]);
+                    }
+                }
+            }
+            return transposed;
         }
 
         public int FindStronglyConnectedComponents()
         {
-            List<List<Vertex>> lst = new List<List<Vertex>>();
-            DepthFirstSearch(1, 2, true, lst);
-            foreach (var i in lst)
+            var finishTimes = TopologicalSort();
+            Graph tg = new Graph();
+            tg.Vertecies = this.Transpose();
+
+            return tg.DepthFirstSearchSCC(finishTimes);
+        }
+        private int DepthFirstSearchSCC(List<Vertex> finishTimes)
+        {
+            Stack<Vertex> queue = new Stack<Vertex>();
+            int[] lvl = InitSearchLvl(Vertecies.Length);
+            List<Vertex>[] owner = new List<Vertex>[Vertecies.Length];
+
+            foreach (var v in finishTimes)
             {
-                foreach (var j in i)
-                    Console.Write(j.Value+" ");
-                Console.WriteLine();
+                if (lvl[v.Value - 1] == -1)
+                {
+                    lvl[v.Value - 1] = 0;
+                    owner[v.Value - 1] = new List<Vertex>();
+                    owner[v.Value - 1].Add(Vertecies[v.Value-1]);
+                    DFSvisitSCC(owner[v.Value - 1], queue, Vertecies[v.Value-1], lvl);
+                }
             }
-            return lst.Count;
+
+            Console.WriteLine();
+            foreach (var master in owner.Where(x => x != null && x.Count > 1))
+            {
+                foreach (var v in master)
+                {
+                    Console.Write(v.Value + " ");
+                }
+                if (master != null)
+                    Console.WriteLine();
+            }
+            return owner.Where(x => x != null && x.Count > 1).Count();
+        }
+        private void DFSvisitSCC(List<Vertex> owner, Stack<Vertex> stack, Vertex start, int[] lvl, int curLvl = 1)
+        {
+            OutputSearch(lvl, stack, start);
+            stack.Push(start);
+            foreach (var desc in start.Adjacent)
+            {
+                if (lvl[desc.Value - 1] == -1)
+                {                    
+                    owner.Add(desc);
+                    lvl[desc.Value - 1] = curLvl;
+                    DFSvisitSCC(owner, stack, desc, lvl, curLvl + 1);
+                }
+            }
+        }
+
+
+
+        public void Dijkstra()
+        {
+
+        }
+        public void FloydWarshall()
+        {
+
         }
 
     }
