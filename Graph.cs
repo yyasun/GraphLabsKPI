@@ -27,11 +27,7 @@ namespace GraphLabs
         public void LoadDirectGraph(string fileName)
         {
             LoadGraph(fileName, true);
-        }
-        public void LoadWeightedDirectGraph(string fileName)
-        {
-            
-        }
+        }    
         void LoadGraph(string fileName, bool isDir)
         {
             var list = File.ReadAllLines(fileName);
@@ -65,8 +61,7 @@ namespace GraphLabs
                     Vertecies[endPoint - 1].Adjacent.Add(Vertecies[value - 1]);
                 }
             }
-        }
-       
+        }       
 
         const string endL = "\r\n";
         void WriteToFile(string str, TextWriter tw)
@@ -138,6 +133,15 @@ namespace GraphLabs
                 tw.Flush();
                 tw.Dispose();
             }
+        }        
+        public void PrintDegreeEachVertex(bool toFile = false)
+        {
+            if (IsKComplete()!=-1)
+                Console.WriteLine($"graph is k-complete: {Vertecies[0].Adjacent.Count}");
+            foreach (var i in Vertecies)
+            {
+                Console.WriteLine($"v{i.Value} has degree: {i.Degree}");
+            }
         }
         public int IsKComplete()
         {
@@ -147,16 +151,7 @@ namespace GraphLabs
             {
                 isKComplete = k == i.Value;
             }
-            return isKComplete ? k : -1 ;
-        }
-        public void PrintDegreeEachVertex(bool toFile = false)
-        {
-            if (IsKComplete()!=-1)
-                Console.WriteLine($"graph is k-complete: {Vertecies[0].Adjacent.Count}");
-            foreach (var i in Vertecies)
-            {
-                Console.WriteLine($"v{i.Value} has degree: {i.Degree}");
-            }
+            return isKComplete ? k : -1;
         }
         public void PrintIsolatedVertexes()
         {
@@ -169,42 +164,41 @@ namespace GraphLabs
                 Console.WriteLine(v.Value);
         }
 
-        public int DepthFirstSearch(int start,int sValue)
+        public int DepthFirstSearch(int start,int sValue, bool detectLoops=false, List<List<Vertex>> lst = null)
         {  
             int[] lvl = InitSearchLvl(Vertecies.Length);
-            Queue<Vertex> queue = new Queue<Vertex>();
+            
             foreach (var i in Vertecies)
             {
+
+                Stack<Vertex> queue = null;
+                if(detectLoops)
+                    queue= new Stack<Vertex>();
                 if (lvl[i.Value - 1] == -1)
-                {
-                    
+                {                    
                     lvl[i.Value - 1] = 0;
-                    DFSVisit(queue,i, lvl);                    
+                    DFSVisit(queue,i, lvl,detectLoops,1,lst);                    
+                }
+                if (detectLoops&&queue.Count > 1)
+                {
+                    lst.Add(queue.ToList());
                 }
             }     
-            return lvl[sValue - 1];
+            return lvl[sValue - 1]-lvl[start-1];
         }
-        public void DFSVisit(Queue<Vertex> queue ,Vertex start,int [] lvl,int curLvl=1)
-        {
-            OutputSearch(lvl, queue, start);
-            queue.Enqueue(start);
+        public void DFSVisit(Stack<Vertex> stack ,Vertex start,int [] lvl,bool detectLoops=false,int curLvl= 1,List<List<Vertex>> lst=null)
+        {            
+            OutputSearch(lvl,stack , start);
+            stack.Push(start);
             foreach (var desc in start.Adjacent)
+            {
                 if (lvl[desc.Value - 1] == -1)
                 {
-                    lvl[desc.Value - 1] = curLvl;                    
-                    DFSVisit(queue,desc, lvl,curLvl+1);
+                    lvl[desc.Value - 1] = curLvl;
+                    DFSVisit(stack, desc, lvl, detectLoops, curLvl + 1, lst);
                 }
-            queue.Dequeue();
-        }
-        private int[] InitSearchLvl(int len)
-        {
-            int[] lvl = new int[len];
-            for (int j = 0; j < lvl.Length; j++)
-            {
-                lvl[j] = -1;
-            }
-            return lvl;
-        }
+            }            
+        }        
         public int BreadthFirstSearch(int start,int sValue)
         {
             int[] lvl = InitSearchLvl(Vertecies.Length);
@@ -231,15 +225,36 @@ namespace GraphLabs
                 i++;
             }
             return lvl[sValue-1];
-        }        
-        void OutputSearch(int[] lvl,Queue<Vertex> frontier , Vertex cur)
+        }
+        private int[] InitSearchLvl(int len)
+        {
+            int[] lvl = new int[len];
+            for (int j = 0; j < lvl.Length; j++)
+            {
+                lvl[j] = -1;
+            }
+            return lvl;
+        }
+        void OutputSearch(int[] lvl,IEnumerable<Vertex> frontier , Vertex cur)
         {
             Console.Write($"Vertex {cur.Value} No: {lvl[cur.Value-1]} Queue: ");
-            foreach(var i in frontier)
+            foreach(var i in frontier.Reverse())
                 Console.Write(i.Value+" ");
             Console.WriteLine();
         }
 
+        public int FindStronglyConnectedComponents()
+        {
+            List<List<Vertex>> lst = new List<List<Vertex>>();
+            DepthFirstSearch(1, 2, true, lst);
+            foreach (var i in lst)
+            {
+                foreach (var j in i)
+                    Console.Write(j.Value+" ");
+                Console.WriteLine();
+            }
+            return lst.Count;
+        }
 
     }
 }
