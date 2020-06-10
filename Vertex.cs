@@ -18,6 +18,7 @@ namespace GraphLabs
                 return _adjacent;
             } 
             set { _adjacent = value; }
-        }        
+        }
+        public int Weight { get; set; }
     }
 }

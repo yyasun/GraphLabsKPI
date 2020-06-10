@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace GraphLabs
@@ -26,6 +27,10 @@ namespace GraphLabs
         public void LoadDirectGraph(string fileName)
         {
             LoadGraph(fileName, true);
+        }
+        public void LoadWeightedDirectGraph(string fileName)
+        {
+            
         }
         void LoadGraph(string fileName, bool isDir)
         {
@@ -164,19 +169,45 @@ namespace GraphLabs
                 Console.WriteLine(v.Value);
         }
 
-        public void DepthFirstSearch(int start,int sValue)
-        { 
-            //out current vertex
-            //output dfs number
-            //output stack  
+        public int DepthFirstSearch(int start,int sValue)
+        {  
+            int[] lvl = InitSearchLvl(Vertecies.Length);
+            Queue<Vertex> queue = new Queue<Vertex>();
+            foreach (var i in Vertecies)
+            {
+                if (lvl[i.Value - 1] == -1)
+                {
+                    
+                    lvl[i.Value - 1] = 0;
+                    DFSVisit(queue,i, lvl);                    
+                }
+            }     
+            return lvl[sValue - 1];
         }
-        public int BreadthFirstSearch(int start,int sValue)
-        {          
-            int[] lvl = new int[Vertecies.Length];
+        public void DFSVisit(Queue<Vertex> queue ,Vertex start,int [] lvl,int curLvl=1)
+        {
+            OutputSearch(lvl, queue, start);
+            queue.Enqueue(start);
+            foreach (var desc in start.Adjacent)
+                if (lvl[desc.Value - 1] == -1)
+                {
+                    lvl[desc.Value - 1] = curLvl;                    
+                    DFSVisit(queue,desc, lvl,curLvl+1);
+                }
+            queue.Dequeue();
+        }
+        private int[] InitSearchLvl(int len)
+        {
+            int[] lvl = new int[len];
             for (int j = 0; j < lvl.Length; j++)
             {
                 lvl[j] = -1;
             }
+            return lvl;
+        }
+        public int BreadthFirstSearch(int start,int sValue)
+        {
+            int[] lvl = InitSearchLvl(Vertecies.Length);
             Queue<Vertex> frontier = new Queue<Vertex>();
             // invariant: queue items are always a frontier
             frontier.Enqueue(Vertecies[start-1]);

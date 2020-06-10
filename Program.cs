@@ -6,8 +6,8 @@ namespace GraphLabs
     {
         static void Main(string[] args)
         {
-            Graph graph = new Graph("graph.txt",false);
-            Console.WriteLine(graph.BreadthFirstSearch(1, 4));
+            Graph graph = new Graph("graph.txt",true);
+            Console.WriteLine(graph.DepthFirstSearch(1,4));
         }
     }
 }
